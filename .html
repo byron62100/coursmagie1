@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manuel de Sorcellerie – Diaporama Interactif</title>
+  <link href="https://fonts.googleapis.com/css?family=Cinzel:400,700|Roboto:300,400&display=swap" rel="stylesheet">
+  <style>
+    /* Réinitialisation et bases */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: 'Roboto', sans-serif; overflow-x: hidden; }
+    body { background: #111; color: #eee; }
+
+    /* Arrière-plan magique en dégradé animé */
+    .background {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -4;
+      background: linear-gradient(45deg, #7F00FF, #00FFFF, #00FF7F, #FF00FF);
+      background-size: 400% 400%;
+      animation: magicalGradient 20s ease infinite;
+    }
+    @keyframes magicalGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Brume légère */
+    .fog {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -3;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.15), transparent 70%);
+      opacity: 0.2;
+      animation: fogAnimation 30s linear infinite;
+    }
+    @keyframes fogAnimation {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(-50px, -50px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    /* Conteneur et diapositives */
+    #slide-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 50px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(5px);
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .slide.active {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    /* Runes animées */
+    .runes {
+      position: absolute;
+      top: 10%;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 2em;
+      opacity: 0;
+      animation: runesFadeIn 4s infinite alternate;
+    }
+    @keyframes runesFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Titres et textes */
+    h1.title {
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #FFD700;
+      text-shadow: 0 0 10px rgba(255,215,0,0.7);
+      opacity: 0;
+      animation: fadeInTitle 3s forwards;
+    }
+    @keyframes fadeInTitle {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h2 {
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #FFCC00;
+      text-shadow: 0 0 8px rgba(255,204,0,0.6);
+      opacity: 0;
+      animation: slideIn 2s forwards;
+    }
+    h3 {
+      font-family: 'Cinzel', serif;
+      margin-top: 30px;
+      font-size: 1.8em;
+      color: #FFA500;
+      text-shadow: 0 0 6px rgba(255,165,0,0.5);
+      opacity: 0;
+      animation: slideIn 2s forwards;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .content {
+      max-width: 800px;
+      margin: auto;
+      font-size: 1.2em;
+      line-height: 1.6;
+      opacity: 0;
+      animation: contentFadeIn 2s forwards;
+      animation-delay: 1s;
+    }
+    @keyframes contentFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    p, li { margin-bottom: 15px; }
+    ul, ol { margin-left: 20px; margin-bottom: 20px; }
+
+    /* Styles des boutons (navigation et quiz) */
+    .btn, .quiz button {
+      background: linear-gradient(45deg, #FF00FF, #00FFFF);
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      margin: 0 10px;
+      cursor: pointer;
+      border-radius: 10px;
+      font-size: 1em;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    .btn:hover, .quiz button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(255,255,255,0.8);
+    }
+
+    .quiz button {
+      margin-top: 10px;
+    }
+    .quiz label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    .feedback {
+      margin-top: 10px;
+      font-style: italic;
+      color: #FFD700;
+    }
+
+    /* Boutons de navigation */
+    .navigation {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+    }
+
+    /* Exercice d'ancrage : animation des racines */
+    .roots {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      margin: 20px auto;
+    }
+    .root {
+      position: absolute;
+      bottom: 0;
+      width: 3px;
+      background: #8B4513;
+      animation: growRoot 5s forwards;
+    }
+    @keyframes growRoot {
+      from { height: 0; }
+      to { height: 100px; }
+    }
+
+    /* Exercice de protection : animation du bouclier */
+    .shield {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,215,0,0) 70%);
+      transform: translate(-50%, -50%);
+      animation: expandShield 3s forwards;
+      pointer-events: none;
+      z-index: 50;
+    }
+    @keyframes expandShield {
+      from { width: 0; height: 0; opacity: 1; }
+      to { width: 300px; height: 300px; opacity: 0; }
+    }
+
+    /* Exercice de purification : animation de la fumée */
+    .smoke {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: rgba(200,200,200,0.8);
+      border-radius: 50%;
+      opacity: 0;
+      animation: smokeRise 4s forwards;
+    }
+    @keyframes smokeRise {
+      0% { transform: translateY(0) scale(0.5); opacity: 1; }
+      100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+    }
+
+    /* Overlay pour messages plein écran */
+    #overlay-message {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #FFD700;
+      font-family: 'Cinzel', serif;
+      font-size: 2.5em;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .slide { padding: 20px; }
+      h1.title { font-size: 2em; }
+      h2 { font-size: 1.8em; }
+      h3 { font-size: 1.5em; }
+      .content { font-size: 1em; }
+      .navigation { bottom: 10px; }
+      .btn, .quiz button { padding: 8px 16px; font-size: 0.9em; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Arrière-plan animé -->
+  <div class="background"></div>
+  <div class="fog"></div>
+
+  <!-- Conteneur du diaporama -->
+  <div id="slide-container">
+    <!-- Slide 1 : Introduction -->
+    <section class="slide active" id="slide-1">
+      <div class="runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ</div>
+      <h1 class="title">Bienvenue dans le Manuel de Sorcellerie</h1>
+      <div class="content">
+        <p>
+          Entrez dans un univers où la magie se révèle à travers chaque geste et chaque souffle. Ce manuel interactif vous invite à explorer des pratiques ancestrales et à comprendre l'importance des énergies mystiques qui nous entourent.
+        </p>
+        <p>
+          Vous apprendrez à vous ancrer, à ériger des protections énergétiques puissantes et à purifier votre environnement pour laisser s'exprimer toute la force de votre pratique ésotérique.
+        </p>
+        <p>
+          Ce voyage initiatique propose également des quiz et des exercices interactifs afin de tester vos connaissances et approfondir votre compréhension. Préparez-vous à découvrir un savoir ancien mêlé à des techniques modernes d’auto-découverte.
+        </p>
+      </div>
+    </section>
+
+    <!-- Slide 2 : Chapitre 1 – L'Ancrage -->
+    <section class="slide" id="slide-2">
+      <h2>Chapitre 1 : L’Ancrage</h2>
+      <div class="content">
+        <p>
+          L’ancrage est le fondement de toute pratique magique. Il vous permet de vous connecter profondément à la Terre, d’absorber son énergie et de stabiliser votre esprit face aux perturbations extérieures. Sans ancrage, l'énergie se disperse et vos rituels perdent de leur intensité.
+        </p>
+        <p>
+          En vous ancrant, vous établissez une base solide qui vous aide à canaliser vos émotions et à garder votre équilibre même dans les moments de chaos. Pensez à un arbre aux racines profondes qui puise force et stabilité pour résister aux tempêtes.
+        </p>
+        <p>
+          Grâce à des exercices de visualisation et de respiration, vous apprendrez à ressentir cette connexion avec la Terre, essentielle pour toute pratique spirituelle et magique.
+        </p>
+        <h3>Exercice Pratique : Visualisation des Racines</h3>
+        <ol>
+          <li>Tenez-vous debout, les pieds écartés à la largeur des épaules.</li>
+          <li>Fermez les yeux et prenez une profonde inspiration en vous concentrant sur l’instant présent.</li>
+          <li>Imaginez des racines s’enfonçant lentement depuis vos pieds dans le sol, cherchant l’énergie vitale de la Terre.</li>
+          <li>Laissez la force de la Terre remonter en vous, vous apportant stabilité et vitalité.</li>
+          <li>Inspirez cette énergie, puis expirez en relâchant toutes vos tensions.</li>
+        </ol>
+        <div class="roots">
+          <div class="root" style="left: 20%; animation-delay: 0s;"></div>
+          <div class="root" style="left: 40%; animation-delay: 1s;"></div>
+          <div class="root" style="left: 60%; animation-delay: 2s;"></div>
+          <div class="root" style="left: 80%; animation-delay: 3s;"></div>
+        </div>
+        <!-- Quiz Chapitre 1 -->
+        <div class="quiz" id="quiz-1">
+          <h4>Quiz : Comprendre l'Ancrage</h4>
+          <p>Quelle est la fonction principale de l’ancrage dans la pratique magique ?</p>
+          <label>
+            <input type="radio" name="quiz1" value="A">
+            Permettre une connexion solide à la Terre et stabiliser l’énergie.
+          </label>
+          <label>
+            <input type="radio" name="quiz1" value="B">
+            Augmenter instantanément vos pouvoirs magiques.
+          </label>
+          <label>
+            <input type="radio" name="quiz1" value="C">
+            Faciliter le voyage astral sans préparation.
+          </label>
+          <label>
+            <input type="radio" name="quiz1" value="D">
+            Remplacer les rituels traditionnels par la méditation.
+          </label>
+          <button onclick="checkQuiz(1, 'A')">Valider ma réponse</button>
+          <div class="feedback" id="feedback-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3 : Chapitre 2 – La Protection -->
+    <section class="slide" id="slide-3">
+      <h2>Chapitre 2 : La Protection</h2>
+      <div class="content">
+        <p>
+          La protection énergétique est primordiale pour préserver votre aura et vous mettre à l’abri des influences négatives. En érigeant un bouclier protecteur, vous créez une barrière qui filtre les énergies indésirables et renforce votre équilibre intérieur.
+        </p>
+        <p>
+          La pratique régulière de la protection vous permet de développer une aura solide, semblable aux remparts d’un château fortifié. Ce champ protecteur vous aide à repousser les perturbations et à maintenir l’harmonie dans votre vie.
+        </p>
+        <p>
+          Dans ce chapitre, vous apprendrez à visualiser un bouclier de lumière dorée et à le renforcer par des techniques de respiration et de méditation. Vous découvrirez comment transformer votre espace intérieur en un sanctuaire inviolable.
+        </p>
+        <h3>Exercice Pratique : Rituel du Bouclier Énergétique</h3>
+        <ol>
+          <li>Asseyez-vous confortablement dans un endroit calme et fermez les yeux.</li>
+          <li>Visualisez une bulle de lumière dorée qui se forme autour de vous.</li>
+          <li>Imaginez qu’à chaque respiration, cette bulle se renforce et devient plus dense.</li>
+          <li>Sentez-vous enveloppé(e) par cette lumière protectrice qui repousse toute énergie négative.</li>
+          <li>Répétez ce rituel quotidiennement pour consolider votre protection.</li>
+        </ol>
+        <button class="btn" onclick="activateShield()">Activer Bouclier</button>
+        <div id="shield-container"></div>
+        <!-- Quiz Chapitre 2 -->
+        <div class="quiz" id="quiz-2">
+          <h4>Quiz : La Protection</h4>
+          <p>Quel est l’avantage principal de renforcer son aura avec un bouclier énergétique ?</p>
+          <label>
+            <input type="radio" name="quiz2" value="A">
+            Se protéger des influences négatives et maintenir l’équilibre intérieur.
+          </label>
+          <label>
+            <input type="radio" name="quiz2" value="B">
+            Augmenter sa puissance offensive en cas de conflit.
+          </label>
+          <label>
+            <input type="radio" name="quiz2" value="C">
+            Faciliter la communication avec les esprits sans préparation.
+          </label>
+          <label>
+            <input type="radio" name="quiz2" value="D">
+            Accroître son charisme pour influencer autrui.
+          </label>
+          <button onclick="checkQuiz(2, 'A')">Valider ma réponse</button>
+          <div class="feedback" id="feedback-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 4 : Chapitre 3 – La Purification -->
+    <section class="slide" id="slide-4">
+      <h2>Chapitre 3 : La Purification</h2>
+      <div class="content">
+        <p>
+          La purification est essentielle pour nettoyer votre espace et votre être intérieur. Elle dissipe les énergies stagnantes et négatives qui s’accumulent au fil du temps, rétablissant une circulation harmonieuse de l’énergie.
+        </p>
+        <p>
+          Après des événements stressants ou des conflits, l’énergie négative peut s’infiltrer dans votre environnement. La purification agit comme un souffle de renouveau, vous aidant à retrouver l’équilibre et à renouveler votre vitalité.
+        </p>
+        <p>
+          Grâce aux rituels de purification, vous apprendrez à identifier et éliminer les blocages énergétiques pour instaurer un espace propice à la croissance spirituelle et à l’harmonie personnelle.
+        </p>
+        <h3>Exercice Pratique : Rituel de la Fumigation</h3>
+        <ol>
+          <li>Procurez-vous un bâton de sauge ou du laurier séché.</li>
+          <li>Allumez-le et laissez la fumée se diffuser lentement dans la pièce.</li>
+          <li>Concentrez-vous sur la fumée et imaginez-la absorbant les énergies négatives accumulées.</li>
+          <li>Récitez à voix basse : "Je purifie cet espace et restaure l’harmonie."</li>
+          <li>Ouvrez une fenêtre pour laisser entrer l’air frais et renouveler l’énergie ambiante.</li>
+        </ol>
+        <button class="btn" onclick="activateSmoke()">Activer Fumigation</button>
+        <div id="smoke-container" style="position: relative; height: 200px;"></div>
+        <!-- Quiz Chapitre 3 -->
+        <div class="quiz" id="quiz-3">
+          <h4>Quiz : La Purification</h4>
+          <p>Pourquoi la purification est-elle cruciale dans la pratique magique ?</p>
+          <label>
+            <input type="radio" name="quiz3" value="A">
+            Elle élimine les énergies stagnantes et favorise un renouveau énergétique.
+          </label>
+          <label>
+            <input type="radio" name="quiz3" value="B">
+            Elle augmente instantanément votre pouvoir magique.
+          </label>
+          <label>
+            <input type="radio" name="quiz3" value="C">
+            Elle n'est nécessaire que lors d'événements très rares.
+          </label>
+          <label>
+            <input type="radio" name="quiz3" value="D">
+            Elle crée une barrière infranchissable contre toute intrusion.
+          </label>
+          <button onclick="checkQuiz(3, 'A')">Valider ma réponse</button>
+          <div class="feedback" id="feedback-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 5 : Conclusion et Exercice Final -->
+    <section class="slide" id="slide-5">
+      <h2>Conclusion et Exercice Final</h2>
+      <div class="content">
+        <p>
+          Pour conclure ce parcours initiatique, récapitulons les enseignements essentiels :
+        </p>
+        <ul>
+          <li><strong>Ancrage</strong> : Une connexion solide à la Terre stabilise votre énergie et vous aide à canaliser vos émotions.</li>
+          <li><strong>Protection</strong> : Le bouclier énergétique renforce votre aura et vous protège des influences négatives.</li>
+          <li><strong>Purification</strong> : Nettoyer votre espace et votre être permet d’éliminer les blocages et de renouveler votre vitalité.</li>
+        </ul>
+        <p>
+          Exercice final : Créez votre propre rituel en combinant ces techniques d’ancrage, de protection et de purification. Pratiquez-le pendant un mois et observez l’impact sur votre énergie et l’harmonie de votre environnement.
+        </p>
+        <p style="text-align: center; margin-top: 20px;">— Fin du diaporama —</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Boutons de navigation -->
+  <div class="navigation">
+    <button class="btn" onclick="changeSlide(-1)">Précédent</button>
+    <button class="btn" onclick="changeSlide(1)">Suivant</button>
+  </div>
+
+  <!-- Overlay pour messages plein écran -->
+  <div id="overlay-message"></div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= slides.length) index = slides.length - 1;
+      slides.forEach(slide => slide.classList.remove('active'));
+      currentSlide = index;
+      slides[currentSlide].classList.add('active');
+    }
+
+    function changeSlide(delta) {
+      showSlide(currentSlide + delta);
+    }
+
+    // Affiche un message plein écran via un overlay
+    function showOverlay(message) {
+      const overlay = document.getElementById('overlay-message');
+      overlay.textContent = message;
+      overlay.style.opacity = '1';
+      overlay.style.display = 'flex';
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+      }, 2000);
+    }
+
+    // Activation du bouclier (Protection)
+    function activateShield() {
+      const shieldContainer = document.getElementById('shield-container');
+      const shield = document.createElement('div');
+      shield.className = 'shield';
+      shieldContainer.appendChild(shield);
+      showOverlay("Bouclier activé : Votre aura est protégée !");
+      setTimeout(() => { shield.remove(); }, 3000);
+    }
+
+    // Activation de la fumée (Purification)
+    function activateSmoke() {
+      const smokeContainer = document.getElementById('smoke-container');
+      for (let i = 0; i < 10; i++) {
+        const smoke = document.createElement('div');
+        smoke.className = 'smoke';
+        smoke.style.left = Math.random() * (smokeContainer.offsetWidth - 20) + 'px';
+        smoke.style.animationDelay = Math.random() * 2 + 's';
+        smokeContainer.appendChild(smoke);
+        setTimeout(() => { smoke.remove(); }, 4000);
+      }
+      showOverlay("Fumigation activée : Espace purifié !");
+    }
+
+    // Vérification des réponses des quiz
+    function checkQuiz(quizNumber, correctValue) {
+      const radios = document.getElementsByName("quiz" + quizNumber);
+      let selected = "";
+      for (const radio of radios) {
+        if (radio.checked) {
+          selected = radio.value;
+          break;
+        }
+      }
+      const feedback = document.getElementById("feedback-" + quizNumber);
+      if (selected === correctValue) {
+        feedback.textContent = "Bonne réponse !";
+      } else if (selected === "") {
+        feedback.textContent = "Veuillez sélectionner une réponse.";
+      } else {
+        feedback.textContent = "Mauvaise réponse. Réfléchissez à nouveau !";
+      }
+    }
+  </script>
+</body>
+</html>
